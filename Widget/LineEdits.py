@@ -49,3 +49,43 @@ class MaxReftEdit(QLineEdit):
         self.setAlignment(Qt.AlignVCenter)
         validator = QRegExpValidator(QRegExp("[4][5-9]|[5-7][0-9]|[8][0-5]"))
         self.setValidator(validator)
+
+#小时输入框
+class HourEdit(QLineEdit):
+    def __init__(self, parent):
+        super(HourEdit, self).__init__()
+        self.setAlignment(Qt.AlignCenter)
+        validator = QRegExpValidator(QRegExp("[0-9]|[1][0-9]|[2][0-3]"))
+        self.setValidator(validator)
+
+#分钟输入框
+class MiniteEdit(QLineEdit):
+    def __init__(self, parent):
+        super(MiniteEdit, self).__init__()
+        self.setAlignment(Qt.AlignCenter)
+        validator = QRegExpValidator(QRegExp("[0-9]|[1-5][0-9]"))
+        self.setValidator(validator)
+
+#模组编号输入框
+class ModuleEdit(QLineEdit):
+    def __init__(self, parent):
+        super(ModuleEdit, self).__init__()
+        self.setAlignment(Qt.AlignVCenter)
+        validator = QRegExpValidator(QRegExp("[1-9]|[1-7][0-9]|[8][0]"))
+        self.setValidator(validator)
+
+#偏移值
+class DeviationEdit(QLineEdit):
+    def __init__(self, parent):
+        super(DeviationEdit, self).__init__()
+        self.setAlignment(Qt.AlignVCenter)
+        validator = QRegExpValidator(QRegExp("^[-+]?\d+(\.\d)?$"))
+        self.setValidator(validator)
+
+#整数
+class Number(QLineEdit):
+    def __init__(self, parent):
+        super(Number, self).__init__()
+        self.setAlignment(Qt.AlignVCenter)
+        validator = QRegExpValidator(QRegExp("^-[0-9][1-9][0-9]"))
+        self.setValidator(validator)

@@ -14,9 +14,9 @@ CMD_TYPE_10 = 0
 TAIL_FIRST = 0xDD
 TAIL_LAST = 0xEE
 
-frame = [HEAD_FIRST_0, HEAD_SECOND_1, PROTOCOL_VERSION_2,LEN_HIGH_3,LEN_LOW_4,PROJECT_CODE_5, SUPPLIER_CODE_6]
-
-def create_frame(ip, timestamp, body=[]):
+def create_frame(ip, order, timestamp, body=[]):
+    CMD_TYPE_10 = order
+    frame = [HEAD_FIRST_0, HEAD_SECOND_1, PROTOCOL_VERSION_2, LEN_HIGH_3, LEN_LOW_4, PROJECT_CODE_5, SUPPLIER_CODE_6]
     frame.extend(ip)
     frame.append(CMD_TYPE_10)
     frame.extend(timestamp)

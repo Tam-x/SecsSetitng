@@ -27,3 +27,16 @@ def create_timestamp():
 def int_to_2bytes(num):
     return (num >> 8) & 0xFF, num & 0xFF
 
+def int2bytes(num):
+    data = []
+    data.append((num >> 8) & 0xFF)
+    data.append(num & 0xFF)
+    return data
+
+def int4bytes(num):
+    data = []
+    data.append((num >> 24) & 0xFF)
+    data.append((num >> 16) & 0xFF)
+    data.append((num >> 8) & 0xFF)
+    data.append(num & 0xFF)
+    return data
