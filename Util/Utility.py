@@ -40,3 +40,18 @@ def int4bytes(num):
     data.append((num >> 8) & 0xFF)
     data.append(num & 0xFF)
     return data
+
+def byte2_to_int(h, l):
+    return (h &0xFF)<< 8 | (l&0xFF)
+
+def byte4_to_int(b1, b2, b3, b4):
+    return (b1 &0xFF)<< 24 |(b2 &0xFF)<< 16 |(b3 &0xFF)<< 8 | (b4&0xFF)
+
+def negative_1byte(num):
+    return int(hex(num & 0xFF), 16)
+
+def negative_2byte(num):
+    return int(hex(num & 0xFFFF), 16)
+
+def negative_4byte(num):
+    return int(hex(num & 0xFFFFFF), 16)

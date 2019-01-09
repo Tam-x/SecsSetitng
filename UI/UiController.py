@@ -5,17 +5,20 @@
 Created by Tan.Xing
 Created date: 2019/01/03
     edited: 2018/01/04:远程连接/处理界面点击事件
-Last edited: 2018/01/04
+    edited: 2018/01/08:获取界面设置命令及输入限制
+Last edited: 2018/01/08
 '''
 
 from PyQt5.QtWidgets import QDialog
 from PyQt5.QtCore import QTimer, QTime
 from UI.UI import Ui_mainWindow
+from Widget.Dialog import AboutDialog
 import paho.mqtt.client as mqtt
 from Config import Config
 from Util import Utility
 from Frame import Frame
-import re, threading, time, queue
+import numpy as np
+import threading, time, queue
 
 class windowController(Ui_mainWindow, QDialog):
     def __init__(self, widget):
@@ -23,16 +26,26 @@ class windowController(Ui_mainWindow, QDialog):
         self.setupUi(widget)
         widget.set_close(self.disconnect_remote)
         self.lastConnectTime = 0
+        self.isConnecting = False
         self.isConnected = False
         self.notifyConnectedStatus = False
         self.notifyUnconnectedStatus = False
+
+        self.cmdA1 = False
+        self.cmdA2 = False
+        self.cmdA3 = False
+        self.cmdA4 = False
+        self.cmdA5 = False
+        self.cmdA6 = False
+        self.cmdA7 = False
+        self.cmdA8 = False
+        self.cmdA9 = False
+
         self.timer = QTimer()
         self.timer.start(5)
         self.infos  = queue.Queue()
         self.init()
         self.click_event()
-        #设置时间
-        # self.timeEditWrok.setTime(QTime(11, 13))
 
     def init(self):
         self.dtuIp, self.dtuIpArray = self.get_dtu_ip()
@@ -46,6 +59,9 @@ class windowController(Ui_mainWindow, QDialog):
     def click_event(self):
         self.btnMqttConnect.clicked.connect(self.click_btn_connect)
         self.timer.timeout.connect(self.flush_ui)
+        self.action_DTU.triggered.connect(self.activate_dtu)
+        self.action_DTU_2.triggered.connect(self.reactivate_dtu)
+        #设置
         self.btnSetSysStatus.clicked.connect(self.click_btn_sys)
         self.btnSetAlarm.clicked.connect(self.click_btn_alarm)
         self.btnSetTimeTable.clicked.connect(self.click_btn_timetable)
@@ -55,6 +71,37 @@ class windowController(Ui_mainWindow, QDialog):
         self.btnSetLogicTemp.clicked.connect(self.click_btn_logic)
         self.btnSetWorkTime.clicked.connect(self.click_btn_worktime)
         self.btnSetOtherValue.clicked.connect(self.click_btn_other_deviation)
+        self.btnSetOtherTime.clicked.connect(self.click_btn_setting_time)
+
+        #读取
+        self.btnReadSysStatus.clicked.connect(self.click_read_sys)
+        self.btnReadAlarm.clicked.connect(self.click_read_alarm)
+        self.btnReadTimeTable.clicked.connect(self.click_read_interval)
+        self.btnReadJudgeTemp.clicked.connect(self.click_read_judge_temp)
+        self.btnReadChangeModle.clicked.connect(self.click_read_module)
+        self.btnReadInterval.clicked.connect(self.click_read_valve)
+        self.btnReadLogicTemp.clicked.connect(self.click_read_logic)
+        self.btnReadWork.clicked.connect(self.click_read_work)
+        self.btnReadOtherValue.clicked.connect(self.click_read_other_deviation)
+
+    def activate_dtu(self):
+        if self.check_mqtt_connected() and self.limit_click_freq():
+            cmd = self.get_reading_cmd(0x901)
+            self.infos.put('[系统激活DTU]命令' + str(cmd) + '发送成功。')
+            self.mqttClient.publish(Config.MQTT_DOWN_TOPIC.format(self.dtuIp), bytes(cmd), 0)
+
+    def reactivate_dtu(self):
+        if self.check_mqtt_connected() and self.limit_click_freq():
+            cmd = self.get_reading_cmd(0x900)
+            self.infos.put('[系统去活DTU]命令' + str(cmd) + '发送成功。')
+            self.mqttClient.publish(Config.MQTT_DOWN_TOPIC.format(self.dtuIp), bytes(cmd), 0)
+
+    def about_dialog(self):
+        dialog = AboutDialog()
+        result = dialog.exec_()
+        if result == QDialog.Accepted:
+            return True
+        return False
 
     def flush_ui(self):
         while self.infos.qsize()>0:
@@ -67,6 +114,34 @@ class windowController(Ui_mainWindow, QDialog):
         if self.notifyUnconnectedStatus:
             self.notifyUnconnectedStatus = False
             self.mqtt_unconnected_status()
+
+        if self.cmdA1:
+            self.cmdA1 = False
+            self.handle_sys_frame()
+        if self.cmdA2:
+            self.cmdA2 = False
+            self.handle_alarm_frame()
+        if self.cmdA3:
+            self.cmdA3 = False
+            self.handle_timetable_frame()
+        if self.cmdA4:
+            self.cmdA4 = False
+            self.handle_judge_frame()
+        if self.cmdA5:
+            self.cmdA5 = False
+            self.handle_module_frame()
+        if self.cmdA6:
+            self.cmdA6 = False
+            self.handle_valve_interval_frame()
+        if self.cmdA7:
+            self.cmdA7 = False
+            self.handle_valve_logic_frame()
+        if self.cmdA8:
+            self.cmdA8 = False
+            self.handle_worktime_frame()
+        if self.cmdA9:
+            self.cmdA9 = False
+            self.handle_other_deviation_frame()
 
 # |---------------------------------|#
 # |          连接MQTT服务器         |
@@ -85,7 +160,7 @@ class windowController(Ui_mainWindow, QDialog):
         if not self.mqttPort:
             self.statusbar.showMessage('MQTT端口号填写有误！')
             return None
-        return 'ok'
+        return True
 
     def mqtt_connected_status(self):
         self.isConnected = True
@@ -96,6 +171,9 @@ class windowController(Ui_mainWindow, QDialog):
         self.btnMqttConnect.setText('连接')
 
     def click_btn_connect(self):
+        if self.isConnecting:
+            self.statusbar.showMessage('正在连接远程服务器...')
+            return
         if self.isConnected:
             self.disconnect_remote()
         else:
@@ -120,11 +198,12 @@ class windowController(Ui_mainWindow, QDialog):
     def limit_click_freq(self):
         if int(round(time.time() * 1000)) - self.lastConnectTime < Config.BTN_CLICK_INTERVAL:
             self.statusbar.showMessage('点击太频繁了!')
-            return None
+            return False
         self.lastConnectTime = int(round(time.time() * 1000))
-        return 'ok'
+        return True
 
     def start_mqtt_client(self):
+        self.isConnecting = True
         thread = threading.Thread(target=self.client_mqtt_loop)
         thread.start()
 
@@ -138,8 +217,9 @@ class windowController(Ui_mainWindow, QDialog):
             self.mqttClient.connect(self.mqttServer, self.mqttPort, 10)
             self.mqttClient.loop_forever()
         except Exception as e:
-            self.infos.put(str(e.args))
+            self.infos.put('连接远程服务器'+self.mqttServer+'失败：'+str(e.args))
             self.isConnected = False
+            self.isConnecting = False
 
     def on_connect_remote(self, client, userdata, flags, rc):
         self.infos.put("Connected remote with result code " + str(rc))
@@ -148,10 +228,11 @@ class windowController(Ui_mainWindow, QDialog):
             self.infos.put('连接服务器成功！')
             client.subscribe(Config.MQTT_UP_TOPIC.format(self.dtuIp))
             self.notifyConnectedStatus = True
+        self.isConnecting = False
 
     def on_message_remote(self, client, userdata, msg):
-        Utility.show_log(msg.topic + " " + msg.payload.decode("utf-8"))
-        # self.handle_remote_msg(msg.payload.decode("utf-8"))
+        self.infos.put('订阅到消息：'+msg.topic + "  " + msg.payload.decode("utf-8"))
+        self.handle_remote_msg(msg.payload)
 
 #|---------------------------------|#
 #|          界面点击事件           |
@@ -160,79 +241,144 @@ class windowController(Ui_mainWindow, QDialog):
     def check_mqtt_connected(self):
         if not self.isConnected:
             self.infos.put(' 提示：当前没有MQTT服务器连接！')
-            return None
+            return False
         return True
 
     def click_btn_sys(self):
-        if self.check_mqtt_connected():
+        if self.check_mqtt_connected() and self.limit_click_freq():
             cmd = self.get_setting_sys_cmd()
             if cmd:
-                self.infos.put('发送命令'+str(cmd)+'成功')
+                self.infos.put('设置系统状态命令' + str(cmd) + '发送成功。')
                 self.mqttClient.publish(Config.MQTT_DOWN_TOPIC.format(self.dtuIp), bytes(cmd),0)
             else:
                 self.infos.put(' 提示：系统状态栏有错误输入！')
 
     def click_btn_alarm(self):
-        if self.check_mqtt_connected():
+        if self.check_mqtt_connected() and self.limit_click_freq():
             cmd = self.get_setting_alarm_cmd()
             if cmd:
-                self.infos.put('发送命令'+str(cmd)+'成功')
+                self.infos.put('设置报警阙值命令' + str(cmd) + '发送成功。')
                 self.mqttClient.publish(Config.MQTT_DOWN_TOPIC.format(self.dtuIp), bytes(cmd),0)
 
-    def click_btn_timetable(self):
-        if self.check_mqtt_connected():
+    def click_btn_timetable(self) :
+        if self.check_mqtt_connected() and self.limit_click_freq():
             cmd = self.get_setting_timetable_cmd()
             if cmd:
-                self.infos.put('发送命令' + str(cmd) + '成功')
+                self.infos.put('设置时段命令' + str(cmd) + '发送成功。')
                 self.mqttClient.publish(Config.MQTT_DOWN_TOPIC.format(self.dtuIp), bytes(cmd), 0)
 
     def click_btn_judgetemp(self):
-        if self.check_mqtt_connected():
+        if self.check_mqtt_connected() and self.limit_click_freq():
             cmd = self.get_setting_judge_cmd()
             if cmd:
-                self.infos.put('发送命令' + str(cmd) + '成功')
+                self.infos.put('设置逻辑控制命令' + str(cmd) + '发送成功。')
                 self.mqttClient.publish(Config.MQTT_DOWN_TOPIC.format(self.dtuIp), bytes(cmd), 0)
 
-    def click_btn_changemodule(self):
-        if self.check_mqtt_connected():
+    def click_btn_changemodule(self) :
+        if self.check_mqtt_connected() and self.limit_click_freq():
             cmd = self.get_setting_changemodule_cmd()
             if cmd:
-                self.infos.put('发送命令' + str(cmd) + '成功')
+                self.infos.put('设置变形模组命令' + str(cmd) + '发送成功。')
                 self.mqttClient.publish(Config.MQTT_DOWN_TOPIC.format(self.dtuIp), bytes(cmd), 0)
             else:
                 self.infos.put(' 提示：变形模组输入有误！')
 
     def click_btn_interval(self):
-        if self.check_mqtt_connected():
+        if self.check_mqtt_connected() and self.limit_click_freq():
             cmd = self.get_setting_interval_cmd()
             if cmd:
-                self.infos.put('发送命令' + str(cmd) + '成功')
+                self.infos.put('设置阀门调节时间命令' + str(cmd) + '发送成功。')
                 self.mqttClient.publish(Config.MQTT_DOWN_TOPIC.format(self.dtuIp), bytes(cmd), 0)
             else:
                 self.infos.put(' 提示：阀门调节时间输入有误！')
 
     def click_btn_logic(self):
-        if self.check_mqtt_connected():
+        if self.check_mqtt_connected() and self.limit_click_freq():
             cmd = self.get_setting_logic_cmd()
             if cmd:
-                self.infos.put('发送命令' + str(cmd) + '成功')
+                self.infos.put('设置阀门逻辑设定温度命令' + str(cmd) + '发送成功。')
                 self.mqttClient.publish(Config.MQTT_DOWN_TOPIC.format(self.dtuIp), bytes(cmd), 0)
             else:
                 self.infos.put(' 提示：阀门逻辑设定温度输入有误！')
 
     def click_btn_worktime(self):
-        if self.check_mqtt_connected():
+        if self.check_mqtt_connected() and self.limit_click_freq():
             cmd = self.get_setting_worktime_cmd()
             if cmd:
-                self.infos.put('发送命令' + str(cmd) + '成功')
+                self.infos.put('设置工作时间命令' + str(cmd) + '发送成功。')
                 self.mqttClient.publish(Config.MQTT_DOWN_TOPIC.format(self.dtuIp), bytes(cmd), 0)
 
     def click_btn_other_deviation(self):
-        if self.check_mqtt_connected():
+        if self.check_mqtt_connected() and self.limit_click_freq():
             cmd = self.get_setting_other_deviation_cmd()
             if cmd:
-                self.infos.put('发送命令' + str(cmd) + '成功')
+                self.infos.put('设置其他偏移命令' + str(cmd) + '发送成功。')
                 self.mqttClient.publish(Config.MQTT_DOWN_TOPIC.format(self.dtuIp), bytes(cmd), 0)
+
+    def click_btn_setting_time(self):
+        if self.check_mqtt_connected() and self.limit_click_freq():
+            cmd = self.get_setting_date_cmd()
+            self.infos.put('设置时间命令' + str(cmd) + '发送成功。')
+            self.mqttClient.publish(Config.MQTT_DOWN_TOPIC.format(self.dtuIp), bytes(cmd), 0)
+    
+    ###############################读取界面###############################
+
+    def click_read_sys(self):
+        if self.check_mqtt_connected() and self.limit_click_freq():
+            cmd = self.get_reading_cmd(0x91)
+            self.infos.put('读取[系统状态]命令' + str(cmd) + '发送成功。')
+            self.mqttClient.publish(Config.MQTT_DOWN_TOPIC.format(self.dtuIp), bytes(cmd), 0)
+
+    def click_read_alarm(self):
+        if self.check_mqtt_connected() and self.limit_click_freq():
+            cmd = self.get_reading_cmd(0x92)
+            self.infos.put('读取[报警值阙值]命令' + str(cmd) + '发送成功。')
+            self.mqttClient.publish(Config.MQTT_DOWN_TOPIC.format(self.dtuIp), bytes(cmd), 0)
+
+    def click_read_interval(self):
+        if self.check_mqtt_connected() and self.limit_click_freq():
+            cmd = self.get_reading_cmd(0x93)
+            self.infos.put('读取[时段相关设置]命令' + str(cmd) + '发送成功。')
+            self.mqttClient.publish(Config.MQTT_DOWN_TOPIC.format(self.dtuIp), bytes(cmd), 0)
+
+    def click_read_judge_temp(self):
+        if self.check_mqtt_connected() and self.limit_click_freq():
+            cmd = self.get_reading_cmd(0x94)
+            self.infos.put('读取[逻辑控制用设定温度]命令' + str(cmd) + '发送成功。')
+            self.mqttClient.publish(Config.MQTT_DOWN_TOPIC.format(self.dtuIp), bytes(cmd), 0)
+
+    def click_read_module(self):
+        if self.check_mqtt_connected() and self.limit_click_freq():
+            cmd = self.get_reading_cmd(0x95)
+            if not cmd:
+                self.infos.put(' 提示：请输入相变模组编号！')
+                return
+            self.infos.put('读取[相变模组偏移值]命令' + str(cmd) + '发送成功。')
+            self.mqttClient.publish(Config.MQTT_DOWN_TOPIC.format(self.dtuIp), bytes(cmd), 0)
+
+    def click_read_valve(self):
+        if self.check_mqtt_connected() and self.limit_click_freq():
+            cmd = self.get_reading_cmd(0x96)
+            self.infos.put('读取[阀门调节间隔]命令' + str(cmd) + '发送成功。')
+            self.mqttClient.publish(Config.MQTT_DOWN_TOPIC.format(self.dtuIp), bytes(cmd), 0)
+
+    def click_read_logic(self):
+        if self.check_mqtt_connected() and self.limit_click_freq():
+            cmd = self.get_reading_cmd(0x97)
+            self.infos.put('读取[阀门逻辑设定温度]命令' + str(cmd) + '发送成功。')
+            self.mqttClient.publish(Config.MQTT_DOWN_TOPIC.format(self.dtuIp), bytes(cmd), 0)
+
+    def click_read_work(self):
+        if self.check_mqtt_connected() and self.limit_click_freq():
+            cmd = self.get_reading_cmd(0x98)
+            self.infos.put('读取[工作时间]命令' + str(cmd) + '发送成功。')
+            self.mqttClient.publish(Config.MQTT_DOWN_TOPIC.format(self.dtuIp), bytes(cmd), 0)
+
+    def click_read_other_deviation(self):
+        if self.check_mqtt_connected() and self.limit_click_freq():
+            cmd = self.get_reading_cmd(0x99)
+            self.infos.put('读取[其他偏移值]命令' + str(cmd) + '发送成功。')
+            self.mqttClient.publish(Config.MQTT_DOWN_TOPIC.format(self.dtuIp), bytes(cmd), 0)
 #|---------------------------------|#
 #|          获取界面信息           |
 #| ---------------------------------|#
@@ -259,7 +405,7 @@ class windowController(Ui_mainWindow, QDialog):
         return None
 
     def get_dtu_com(self):
-        return self.comboBox.currentIndex()+2
+        return self.comboBox.currentIndex()+1
 
     def get_mqtt_server(self):
         ip1 = self.editMqttAdr.text().strip()
@@ -275,6 +421,10 @@ class windowController(Ui_mainWindow, QDialog):
         if port:
             return int(port)
         return None
+
+#############################################################
+#                          设置命令                         #
+#############################################################
 
     #0xA1:获取设置系统状态数据
     def get_setting_sys_cmd(self):
@@ -441,9 +591,14 @@ class windowController(Ui_mainWindow, QDialog):
     #0xA5:获取设置相变模组偏移值
     def get_setting_changemodule_cmd(self):
         num = self.edtChangeModleNum.text().strip()
-        deviation   = self.edtChangeModleValue.text().strip()
+        deviation  = self.edtChangeModleValue.text().strip()
         if num and deviation:
             deviation = int(float(deviation) * 10)
+            if deviation > 127 or deviation < -128:
+                self.infos.put(' 提示：偏移值不合理！')
+                return None
+            if deviation < 0:
+                deviation = Utility.negative_1byte(deviation)
             body = [self.dtuCom, self.deviceAdr, int(num), deviation]
             return Frame.create_frame(self.dtuIpArray, 0xA5, Utility.create_timestamp(), body)
         return None
@@ -464,7 +619,14 @@ class windowController(Ui_mainWindow, QDialog):
         temp = self.edtLogicTemp.text().strip()
         temp1 = self.edtLogicTemp1.text().strip()
         temp2 = self.edtLogicTemp2.text().strip()
-        if temp and temp1 and temp2:
+        import math
+        if temp and temp1 and temp2 and math.fabs(int(temp))<256 and math.fabs(int(temp1))<256 and math.fabs(int(temp2))<256:
+            if int(temp) < 0:
+                temp = Utility.negative_1byte(int(temp))
+            if int(temp1) < 0:
+                temp1 = Utility.negative_1byte(int(temp1))
+            if int(temp2) < 0:
+                temp2 = Utility.negative_1byte(int(temp2))
             body = [self.dtuCom, self.deviceAdr, int(temp), int(temp1), int(temp2)]
             return Frame.create_frame(self.dtuIpArray, 0xA7, Utility.create_timestamp(), body)
         return False
@@ -475,7 +637,7 @@ class windowController(Ui_mainWindow, QDialog):
         work = self.timeEditWrok.text().split(':')
         workHour = int(work[0])
         workMinite = int(work[1])
-        day = self.timeEditOffWork.text()
+        day = self.timeEditOffWork.text().split(':')
         offWorkHour = int(day[0])
         offWorkMinite = int(day[1])
         body = [self.dtuCom, self.deviceAdr, status, workHour, workMinite, offWorkHour, offWorkMinite]
@@ -492,17 +654,163 @@ class windowController(Ui_mainWindow, QDialog):
         outdoor = self.edtOtherTemp.text().strip()
         waterIn = self.edtOtherWaterIn.text().strip()
         waterOut = self.edtOtherWaterOut.text().strip()
-        if not sun or float(sun) > 25.5:
+        if not sun or float(sun) > 12.7 or float(sun) < -12.8:
             self.infos.put(' 提示：太阳能温度偏差填写不正确！')
             return False
-        if not waterOut or float(waterOut) > 25.5:
+        if not waterOut or float(waterOut)  > 12.7 or float(waterOut) < -12.8:
             self.infos.put(' 提示：末端回水偏移填写不正确！')
             return False
-        if not outdoor or float(outdoor) > 25.5:
+        if not outdoor or float(outdoor)  > 12.7 or float(outdoor) < -12.8:
             self.infos.put(' 提示：室外温度偏移填写不正确！')
             return False
-        if not waterIn or float(waterIn) > 25.5:
+        if not waterIn or float(waterIn)  > 12.7 or float(waterIn) < -12.8:
             self.infos.put(' 提示：末端进水偏移填写不正确！')
             return False
-        body = [self.dtuCom, self.deviceAdr, int(float(sun)*10), int(float(waterOut)*10), int(float(outdoor)*10), int(float(waterIn)*10)]
+        sun = int(float(sun)*10)
+        waterOut = int(float(waterOut)*10)
+        outdoor = int(float(outdoor)*10)
+        waterIn = int(float(waterIn)*10)
+        if sun < 0:
+            sun = Utility.negative_1byte(sun)
+        if waterOut < 0:
+            waterOut = Utility.negative_1byte(waterOut)
+        if outdoor < 0:
+            outdoor = Utility.negative_1byte(outdoor)
+        if waterIn < 0:
+            waterIn = Utility.negative_1byte(waterIn)
+        body = [self.dtuCom, self.deviceAdr, sun, waterOut, outdoor, waterIn]
         return Frame.create_frame(self.dtuIpArray, 0xA9, Utility.create_timestamp(), body)
+
+    # 0xAA:时间设置
+    def get_setting_date_cmd(self):
+        import datetime
+        i = datetime.datetime.now()
+        body = [self.dtuCom, self.deviceAdr,i.year - 2000, i.month, i.day, i.weekday()+1, i.hour, i.minute, i.second]
+        return Frame.create_frame(self.dtuIpArray, 0xAA, Utility.create_timestamp(), body)
+    #############################################################
+    #                          读取命令                         #
+    #############################################################
+    def get_reading_cmd_body(self):
+        return [self.dtuCom, self.deviceAdr, 0, 0, 0, 0, 0, 0]
+
+    def get_reading_cmd(self, order):
+        body = self.get_reading_cmd_body()
+        if order == 0x901:
+            body[0] = 1
+            order = 0x90
+        elif order == 0x900:
+            body[0] = 0
+            order = 0x90
+        elif order == 0x95:
+            module = self.edtShowChangeModleNum.text()
+            if module:
+                body[2] = int(module)
+            else:
+                return False
+        return Frame.create_frame(self.dtuIpArray, order, Utility.create_timestamp(), body)
+
+    #############################################################
+    #                          订阅消息                        #
+    #############################################################
+    def handle_remote_msg(self, frame):
+        if Frame.check_frame(frame):
+            order = frame[11]
+            self.temp = frame[18:-3]
+            if order == 0xA1:
+                self.cmdA1 = True
+            elif order == 0xA2:
+                self.cmdA2 = True
+            elif order == 0xA3:
+                self.cmdA3 = True
+            elif order == 0xA4:
+                self.cmdA4 = True
+            elif order == 0xA5:
+                self.cmdA5 = True
+            elif order == 0xA6:
+                self.cmdA6 = True
+            elif order == 0xA7:
+                self.cmdA7 = True
+            elif order == 0xA8:
+                self.cmdA8 = True
+            elif order == 0xA9:
+                self.cmdA9 = True
+
+    def handle_sys_frame(self):
+        data = self.temp
+        if data:
+            self.edtShowBootStatus.setText(self.comBootStatus.itemText(data[2]&0xFF))
+            self.edtShowWorkMode.setText(self.comWorkMode.itemText(data[3]&0xFF))
+            self.edtShowSupplyHeat.setText(self.comSupplyHeat.itemText(data[4]&0xFF))
+            self.edtShowDayMode.setText(self.comDayMode.itemText(data[5]&0xFF))
+            self.edtShowMinReft.setText(str(data[6]&0xFF))
+            self.edtShowMaxRefT.setText(str(data[7]&0xFF))
+
+    def handle_alarm_frame(self):
+        data = self.temp
+        if data:
+            self.edtShowAlarmTemp.setText(str(np.short(Utility.byte2_to_int(data[2], data[3]))))
+            self.edtShowAlarmPressIn.setText(str(np.short(Utility.byte2_to_int(data[4], data[5]))))
+            self.edtShowAlarmPressOut.setText(str(np.short(Utility.byte2_to_int(data[6], data[7]))))
+            self.edtShowAlarmFlowIn.setText(str(np.short(Utility.byte2_to_int(data[8], data[9]))))
+            self.edtShowAlarmFlowOut.setText(str(np.short(Utility.byte2_to_int(data[10], data[11]))))
+
+    def handle_timetable_frame(self):
+        data = self.temp
+        if data:
+            self.edtShowTimeTableNum.setText(str(data[2]&0xFF))
+            self.edtReadTimeTable1.setText(str(data[3]&0xFF)+'H'+str(data[4]&0xFF)+'M '+self.comTimeTable2.itemText(data[6]&0xFF))
+            self.edtReadTimeTable1_2.setText(str(data[7]&0xFF)+'H'+str(data[8]&0xFF)+'M '+self.comTimeTable2.itemText(data[10]&0xFF))
+            self.edtReadTimeTable3.setText(str(data[11]&0xFF)+'H'+str(data[12]&0xFF)+'M '+self.comTimeTable2.itemText(data[14]&0xFF))
+            self.edtReadTimeTable4.setText(str(data[15]&0xFF)+'H'+str(data[16]&0xFF)+'M '+self.comTimeTable2.itemText(data[18]&0xFF))
+            self.edtReadTimeTable5.setText(str(data[19]&0xFF)+'H'+str(data[20]&0xFF)+'M '+self.comTimeTable2.itemText(data[22]&0xFF))
+            self.edtReadTimeTable6.setText(str(data[23]&0xFF)+'H'+str(data[24]&0xFF)+'M '+self.comTimeTable2.itemText(data[26]&0xFF))
+            self.edtReadTimeTable7.setText(str(data[27]&0xFF)+'H'+str(data[28]&0xFF)+'M '+self.comTimeTable2.itemText(data[30]&0xFF))
+            self.edtReadTimeTable8.setText(str(data[31]&0xFF)+'H'+str(data[32]&0xFF)+'M '+self.comTimeTable2.itemText(data[34]&0xFF))
+            self.edtReadTimeTable9.setText(str(data[35]&0xFF)+'H'+str(data[36]&0xFF)+'M '+self.comTimeTable2.itemText(data[38]&0xFF))
+            self.edtReadTimeTable10.setText(str(data[39]&0xFF)+'H'+str(data[40]&0xFF)+'M '+self.comTimeTable2.itemText(data[42]&0xFF))
+
+    def handle_judge_frame(self):
+        data = self.temp
+        if data:
+            self.edtShowSolarTemp1.setText(str(np.short(Utility.byte2_to_int(data[2], data[3]))))
+            self.edtShowSolarTemp2.setText(str(np.short(Utility.byte2_to_int(data[4], data[5]))))
+            self.edtShowSolarTemp3.setText(str(np.short(Utility.byte2_to_int(data[6], data[7]))))
+            self.edtShowSolarTemp4.setText(str(np.short(Utility.byte2_to_int(data[8], data[9]))))
+            self.edtShowJudgeTemp1.setText(str(np.short(Utility.byte2_to_int(data[10], data[11]))))
+            self.edtShowJudgeTemp2.setText(str(np.short(Utility.byte2_to_int(data[12], data[13]))))
+            self.edtShowJudgeTemp3.setText(str(np.short(Utility.byte2_to_int(data[14], data[15]))))
+
+    def handle_module_frame(self):
+        data = self.temp
+        if data:
+            value = np.byte(data[3]&0xFF)
+            self.edtShowChangeModleValue.setText(str(value/10))
+
+    def handle_valve_interval_frame(self):
+        data = self.temp
+        if data:
+            self.edtShowPinterval.setText(str(np.short(Utility.byte2_to_int(data[2], data[3]))))
+            self.edtShowFinterval.setText(str(np.short(Utility.byte2_to_int(data[4], data[5]))))
+
+    def handle_valve_logic_frame(self):
+        data = self.temp
+        if data:
+            self.edtShowLogicTemp.setText(str(np.byte(data[2]&0xFF)))
+            self.edtShowLogicTemp1.setText(str(np.byte(data[3]&0xFF)))
+            self.edtShowLogicTemp2.setText(str(np.byte(data[4]&0xFF)))
+
+    def handle_worktime_frame(self):
+        data = self.temp
+        if data:
+            if data[2]&0xFF == 0:
+                self.radioButton_5.setChecked(True)
+                self.radioButton_2.setChecked(False)
+            else:
+                self.radioButton_5.setChecked(False)
+                self.radioButton_2.setChecked(True)
+            workH = data[3]&0xFF
+            workM = data[4]&0xFF
+            offH = data[5]&0xFF
+            offM = data[6]&0xFF
+            self.timeEdit.setTime(QTime(workH, workM))
+            self.timeEdit_2.setTime(QTime(offH, offM))

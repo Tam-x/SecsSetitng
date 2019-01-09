@@ -14,6 +14,10 @@ CMD_TYPE_10 = 0
 TAIL_FIRST = 0xDD
 TAIL_LAST = 0xEE
 
+# |---------------------------------|#
+# |             创建命令            |
+# | ---------------------------------|#
+#
 def create_frame(ip, order, timestamp, body=[]):
     CMD_TYPE_10 = order
     frame = [HEAD_FIRST_0, HEAD_SECOND_1, PROTOCOL_VERSION_2, LEN_HIGH_3, LEN_LOW_4, PROJECT_CODE_5, SUPPLIER_CODE_6]
@@ -27,6 +31,17 @@ def create_frame(ip, order, timestamp, body=[]):
     frame.append(int(c8, 16))
     frame.extend([TAIL_FIRST, TAIL_LAST])
     return frame
+
+def check_frame(frame):
+    length = len(frame)
+    if length < 21:
+        return False
+    temp = frame[:-3]
+    crc = frame[length-3] & 0xFF
+    c8 = crc8(temp).hexdigest()
+    if crc == int(c8, 16):
+        return True
+    return False
 
 
 
