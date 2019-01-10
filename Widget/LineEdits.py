@@ -79,7 +79,36 @@ class DeviationEdit(QLineEdit):
     def __init__(self, parent):
         super(DeviationEdit, self).__init__()
         self.setAlignment(Qt.AlignVCenter)
-        validator = QRegExpValidator(QRegExp("^[-+]?\d+(\.\d)?$"))
+        validator = QRegExpValidator(QRegExp('^-?[0-9]([.]{1}[0-9]{1})?$|^-12.8$|1[0-2]([.]{1}[0-7]{1})?$'))
+        self.setValidator(validator)
+
+#32-bit singed integer
+class SingedInteger(QLineEdit):
+    def __init__(self, parent):
+        super(SingedInteger, self).__init__()
+        validator = QRegExpValidator(QRegExp('^-?(\d{1,9}|1\d{9}|2(0\d{8}|1([0-3]\d{7}|4([0-6]\d{6}|7([0-3]\d{5}|4([0-7]\d{4}|8([0-2]\d{3}|3([0-5]\d{2}|6([0-3]\d|4[0-7])))))))))$|^-2147483648$'))
+        self.setValidator(validator)
+
+# 16-bit singed short 32767
+class SingedShort(QLineEdit):
+    def __init__(self, parent):
+        super(SingedShort, self).__init__()
+        validator = QRegExpValidator(QRegExp('^-?(\d{1,4}|[1-2]\d{4}|3([0-1]{3}|2([0-6]\d{2}|7([0-5]\d{1}|6([0-7])))))$|^-32768$'))
+        self.setValidator(validator)
+
+# 16-bit singed short 65535
+class UnSingedShort(QLineEdit):
+    def __init__(self, parent):
+        super(UnSingedShort, self).__init__()
+        validator = QRegExpValidator(QRegExp('[1-9]\d{1,3}|[1-5]\d{4}|6([1-4]\d{3}|5([0-4]{2}|5([0-2]\d{1}|3([0-5]))))$|^0'))
+        self.setValidator(validator)
+
+
+# 8-bit singed byte 127
+class SingedByte(QLineEdit):
+    def __init__(self, parent):
+        super(SingedByte, self).__init__()
+        validator = QRegExpValidator(QRegExp('^-?([1-9][0-9]|1([0-1]\d|2[0-7]))$|^-128$|0'))
         self.setValidator(validator)
 
 #整数
@@ -87,5 +116,5 @@ class Number(QLineEdit):
     def __init__(self, parent):
         super(Number, self).__init__()
         self.setAlignment(Qt.AlignVCenter)
-        validator = QRegExpValidator(QRegExp("^-[0-9][1-9][0-9]"))
+        validator = QRegExpValidator(QRegExp("^(0|-?[1-9][0-9]*)$"))
         self.setValidator(validator)

@@ -7,15 +7,17 @@
 # WARNING! All changes made in this file will be lost!
 
 from PyQt5 import QtCore, QtGui, QtWidgets
+from Ico.Ico import *
 from Widget.LineEdits import *
 
 class Ui_mainWindow(object):
     def setupUi(self, mainWindow):
         mainWindow.setObjectName("mainWindow")
-        mainWindow.resize(1036, 672)
+        mainWindow.resize(1036, 660)
+        mainWindow.setWindowIcon(QtGui.QIcon(':panda.ico'))
         mainWindow.setStyleSheet("/* === Shared === */\n"
-"QStackedWidget, QLabel, QPushButton, QRadioButton, QCheckBox, \n"
-"QGroupBox, QStatusBar, QToolButton, QComboBox, QDialog {\n"
+"QLabel, QPushButton, QRadioButton, QCheckBox, \n"
+"QGroupBox, QStatusBar, QToolButton, QComboBox{\n"
 "    background-color: #222222;\n"
 "    color: #BBBBBB;\n"
 "    font-family: \"Segoe UI\";\n"
@@ -26,13 +28,6 @@ class Ui_mainWindow(object):
 "    background: #222222;\n"
 "    color: #BBBBBB;\n"
 "    font-family: \"Segoe UI\";\n"
-"}\n"
-"\n"
-"/* === QToolTip === */\n"
-"QToolTip {\n"
-"    background-color: #000000;\n"
-"    border: 2px solid #333333;\n"
-"    color: yellow;\n"
 "}\n"
 "\n"
 "/* === QPushButton === */\n"
@@ -260,249 +255,11 @@ class Ui_mainWindow(object):
 "    background: #444444;\n"
 "}\n"
 "\n"
-"/* === QScrollBar:vertical === */\n"
-"QScrollBar:vertical {\n"
-"    background: #111111;\n"
-"    width: 16px;\n"
-"    margin: 16px 0 16px 0;\n"
-"}\n"
-"\n"
-"QScrollBar::handle:vertical {\n"
-"    background: #555555;\n"
-"    min-height: 16px;\n"
-"}\n"
-"\n"
-"QScrollBar::add-line:vertical {\n"
-"    background: #444444;\n"
-"    height: 16px;\n"
-"    subcontrol-position: bottom;\n"
-"    subcontrol-origin: margin;\n"
-"}\n"
-"\n"
-"QScrollBar::sub-line:vertical {\n"
-"    background: #444444;\n"
-"    height: 16px;\n"
-"    subcontrol-position: top;\n"
-"    subcontrol-origin: margin;\n"
-"}\n"
-"\n"
-"QScrollBar::add-page:vertical, QScrollBar::sub-page:vertical {\n"
-"    background: none;\n"
-"}\n"
-"\n"
-"QScrollBar:up-arrow:vertical, QScrollBar:down-arrow:vertical {\n"
-"    border: 2px solid #333333;\n"
-"    width: 6px;\n"
-"    height: 6px;\n"
-"    background: #5f5f5f;\n"
-"}\n"
-"\n"
-"/* === QScrollBar:horizontal === */\n"
-"QScrollBar:horizontal {\n"
-"    background: #111111;\n"
-"    height: 16px;\n"
-"    margin: 0 16px 0 16px;\n"
-"}\n"
-"\n"
-"QScrollBar::handle:horizontal {\n"
-"    background: #555555;\n"
-"    min-width: 16px;\n"
-"}\n"
-"\n"
-"QScrollBar::add-line:horizontal {\n"
-"    background: #444444;\n"
-"    width: 16px;\n"
-"    subcontrol-position: right;\n"
-"    subcontrol-origin: margin;\n"
-"}\n"
-"\n"
-"QScrollBar::sub-line:horizontal {\n"
-"    background: #444444;\n"
-"    width: 16px;\n"
-"    subcontrol-position: left;\n"
-"    subcontrol-origin: margin;\n"
-"}\n"
-"\n"
-"QScrollBar::add-page:horizontal, QScrollBar::sub-page:horizontal {\n"
-"    background: none;\n"
-"}\n"
-"\n"
-"QScrollBar:left-arrow:horizontal, QScrollBar:right-arrow:horizontal {\n"
-"    border: 2px solid #333333;\n"
-"    width: 6px;\n"
-"    height: 6px;\n"
-"    background: #5f5f5f;\n"
-"}\n"
-"\n"
 "/* =================== */\n"
 "QLineEdit, QListView, QTreeView, QTableView, QAbstractSpinBox {\n"
 "    background-color: black;\n"
 "    color: #BBBBBB;\n"
 "    border: 1px solid #333333;\n"
-"}\n"
-"\n"
-"QAbstractScrollArea, QLineEdit, QTextEdit, QAbstractSpinBox, QComboBox {\n"
-"    border-color: #333333;\n"
-"    border: 1px solid #333333;\n"
-"\n"
-"}\n"
-"\n"
-"/* === QHeaderView === */\n"
-"QHeaderView::section {\n"
-"    background: #222222;\n"
-"    border: 0;\n"
-"    color: #BBBBBB;\n"
-"    padding: 3px 0 3px 4px;\n"
-"}\n"
-"\n"
-"/* === QListView === */\n"
-"QListView::item:hover {\n"
-"    background: #333333;\n"
-"}\n"
-"\n"
-"QListView::item:selected {\n"
-"    background: #111111;\n"
-"    color: yellow;\n"
-"}\n"
-"\n"
-"/* === QTableView === */\n"
-"QTableView::item:hover {\n"
-"    background: #333333;\n"
-"}\n"
-"\n"
-"QTableView::item:hover {\n"
-"    background: #111111;\n"
-"    color: yellow;\n"
-"}\n"
-"\n"
-"/* === QTreeView === */\n"
-"QTreeView::item {\n"
-"    background: black;\n"
-"}\n"
-"\n"
-"QTreeView::item:hover {\n"
-"    background: #333333;\n"
-"}\n"
-"\n"
-"QTreeView::item:selected {\n"
-"    background: #111111;\n"
-"    color: yellow;\n"
-"}\n"
-"\n"
-"QTreeView::branch {\n"
-"\n"
-"}\n"
-"\n"
-"QTreeView::branch:has-siblings:adjoins-item {\n"
-"\n"
-"}\n"
-"\n"
-"QTreeView::branch:has-siblings:!adjoins-item {\n"
-"\n"
-"}\n"
-"\n"
-"QTreeView::branch:closed:has-children:has-siblings {\n"
-"\n"
-"}\n"
-"\n"
-"QTreeView::branch:has-children:!has-siblings:closed {\n"
-"\n"
-"}\n"
-"\n"
-"QTreeView::branch:!has-children:!has-siblings:adjoins-item {\n"
-"\n"
-"}\n"
-"\n"
-"QTreeView::branch:open:has-children:has-siblings {\n"
-"\n"
-"}\n"
-"\n"
-"QTreeView::branch:open:has-children:!has-siblings {\n"
-"\n"
-"}\n"
-"\n"
-"/* === Customizations === */\n"
-"QFrame#infoLabel {\n"
-"    border: 1px inset #333333;\n"
-"}\n"
-"2.\n"
-".QWidget {\n"
-"   background-color: beige;\n"
-"}\n"
-"\n"
-"QToolBar {\n"
-"    background-color: beige;\n"
-"}\n"
-"\n"
-"QDialog, QFileDialog {\n"
-"    background-color: beige;\n"
-"}\n"
-"\n"
-"QTabWidget::pane { /* The tab widget frame */\n"
-"    border-top: 2px solid #C2C7CB;\n"
-"}\n"
-"\n"
-"QTabWidget::tab-bar {\n"
-"    left: 5px; /* move to the right by 5px */\n"
-"}\n"
-"\n"
-"QTabBar, QTabWidget {\n"
-"    background-color: beige;\n"
-"}\n"
-"QTabBar::tab {\n"
-"     background: qlineargradient(x1: 0, y1: 0, x2: 0, y2: 1,\n"
-"                                 stop: 0 #E1E1E1, stop: 0.4 #DDDDDD,\n"
-"                                 stop: 0.5 #D8D8D8, stop: 1.0 #D3D3D3);\n"
-"     border: 1px solid darkkhaki;\n"
-"     border-bottom-color: #C2C7CB; /* same as the pane color */\n"
-"     border-top-left-radius: 4px;\n"
-"     border-top-right-radius: 4px;\n"
-"     min-width: 8ex;\n"
-"     padding: 2px;\n"
-" }\n"
-"QTabBar::tab:selected, QTabBar::tab:hover {\n"
-"    background: qlineargradient(x1: 0, y1: 0, x2: 0, y2: 1,\n"
-"                                stop: 0 #fafafa, stop: 0.4 #f4f4f4,\n"
-"                                stop: 0.5 #e7e7e7, stop: 1.0 #fafafa);\n"
-"}\n"
-"\n"
-"QTabBar::tab:selected {\n"
-"    border-color: #9B9B9B;\n"
-"    border-bottom-color: #C2C7CB; /* same as pane color */\n"
-"}\n"
-"\n"
-"QTabBar::tab:!selected {\n"
-"    margin-top: 2px; /* make non-selected tabs look smaller */\n"
-"}\n"
-"\n"
-"/* Nice Windows-XP-style password character. */\n"
-"QLineEdit[echoMode=\"2\"] {\n"
-"    lineedit-password-character: 9679;\n"
-"}\n"
-"\n"
-"QHeaderView::section {\n"
-"     background-color: qlineargradient(x1:0, y1:0, x2:0, y2:1,\n"
-"                                       stop:0 #616161, stop: 0.5 #505050,\n"
-"                                       stop: 0.6 #434343, stop:1 #656565);\n"
-"     color: white;\n"
-"     padding-left: 4px;\n"
-"     border: 1px solid #6c6c6c;\n"
-" }\n"
-"\n"
-" QHeaderView::section:checked\n"
-" {\n"
-"     background-color: red;\n"
-" }\n"
-"/* === QHeaderView === */\n"
-"QHeaderView::section {\n"
-"    height: 20px;\n"
-"}\n"
-"\n"
-"QHeaderView::section {\n"
-"    background: #666;\n"
-"    border: 0;\n"
-"    color: #000;\n"
-"    padding-left: 4px;\n"
 "}\n"
 "\n"
 "")
@@ -678,32 +435,32 @@ class Ui_mainWindow(object):
         self.label_44 = QtWidgets.QLabel(self.groupBox_11)
         self.label_44.setObjectName("label_44")
         self.gridLayout_14.addWidget(self.label_44, 0, 0, 1, 1)
-        self.edtAlarmTemp = QtWidgets.QLineEdit(self.groupBox_11)
+        self.edtAlarmTemp = SingedShort(self.groupBox_11)
         self.edtAlarmTemp.setInputMethodHints(QtCore.Qt.ImhNone)
         self.edtAlarmTemp.setObjectName("edtAlarmTemp")
         self.gridLayout_14.addWidget(self.edtAlarmTemp, 0, 1, 1, 1)
         self.label_45 = QtWidgets.QLabel(self.groupBox_11)
         self.label_45.setObjectName("label_45")
         self.gridLayout_14.addWidget(self.label_45, 0, 2, 1, 1)
-        self.edtAlarmPressIn = QtWidgets.QLineEdit(self.groupBox_11)
+        self.edtAlarmPressIn = SingedShort(self.groupBox_11)
         self.edtAlarmPressIn.setObjectName("edtAlarmPressIn")
         self.gridLayout_14.addWidget(self.edtAlarmPressIn, 0, 3, 1, 1)
         self.label_46 = QtWidgets.QLabel(self.groupBox_11)
         self.label_46.setObjectName("label_46")
         self.gridLayout_14.addWidget(self.label_46, 1, 0, 1, 1)
-        self.edtAlarmPressOut = QtWidgets.QLineEdit(self.groupBox_11)
+        self.edtAlarmPressOut = SingedShort(self.groupBox_11)
         self.edtAlarmPressOut.setObjectName("edtAlarmPressOut")
         self.gridLayout_14.addWidget(self.edtAlarmPressOut, 1, 1, 1, 1)
         self.label_47 = QtWidgets.QLabel(self.groupBox_11)
         self.label_47.setObjectName("label_47")
         self.gridLayout_14.addWidget(self.label_47, 1, 2, 1, 1)
-        self.edtAlarmFlowIn = QtWidgets.QLineEdit(self.groupBox_11)
+        self.edtAlarmFlowIn = SingedShort(self.groupBox_11)
         self.edtAlarmFlowIn.setObjectName("edtAlarmFlowIn")
         self.gridLayout_14.addWidget(self.edtAlarmFlowIn, 1, 3, 1, 1)
         self.label_48 = QtWidgets.QLabel(self.groupBox_11)
         self.label_48.setObjectName("label_48")
         self.gridLayout_14.addWidget(self.label_48, 2, 0, 1, 1)
-        self.edtAlarmFlowOut = QtWidgets.QLineEdit(self.groupBox_11)
+        self.edtAlarmFlowOut = SingedShort(self.groupBox_11)
         self.edtAlarmFlowOut.setObjectName("edtAlarmFlowOut")
         self.gridLayout_14.addWidget(self.edtAlarmFlowOut, 2, 1, 1, 1)
         self.horizontalLayout_9 = QtWidgets.QHBoxLayout()
@@ -1137,43 +894,43 @@ class Ui_mainWindow(object):
         self.label_75 = QtWidgets.QLabel(self.groupBox_19)
         self.label_75.setObjectName("label_75")
         self.gridLayout_23.addWidget(self.label_75, 0, 0, 1, 1)
-        self.edtSolarTemp1 = QtWidgets.QLineEdit(self.groupBox_19)
+        self.edtSolarTemp1 = SingedShort(self.groupBox_19)
         self.edtSolarTemp1.setObjectName("edtSolarTemp1")
         self.gridLayout_23.addWidget(self.edtSolarTemp1, 0, 1, 1, 1)
         self.label_76 = QtWidgets.QLabel(self.groupBox_19)
         self.label_76.setObjectName("label_76")
         self.gridLayout_23.addWidget(self.label_76, 0, 2, 1, 1)
-        self.edtSolarTemp2 = QtWidgets.QLineEdit(self.groupBox_19)
+        self.edtSolarTemp2 = SingedShort(self.groupBox_19)
         self.edtSolarTemp2.setObjectName("edtSolarTemp2")
         self.gridLayout_23.addWidget(self.edtSolarTemp2, 0, 3, 1, 1)
         self.label_77 = QtWidgets.QLabel(self.groupBox_19)
         self.label_77.setObjectName("label_77")
         self.gridLayout_23.addWidget(self.label_77, 1, 0, 1, 1)
-        self.edtSolarTemp3 = QtWidgets.QLineEdit(self.groupBox_19)
+        self.edtSolarTemp3 = SingedShort(self.groupBox_19)
         self.edtSolarTemp3.setObjectName("edtSolarTemp3")
         self.gridLayout_23.addWidget(self.edtSolarTemp3, 1, 1, 1, 1)
         self.label_78 = QtWidgets.QLabel(self.groupBox_19)
         self.label_78.setObjectName("label_78")
         self.gridLayout_23.addWidget(self.label_78, 1, 2, 1, 1)
-        self.edtSolarTemp4 = QtWidgets.QLineEdit(self.groupBox_19)
+        self.edtSolarTemp4 = SingedShort(self.groupBox_19)
         self.edtSolarTemp4.setObjectName("edtSolarTemp4")
         self.gridLayout_23.addWidget(self.edtSolarTemp4, 1, 3, 1, 1)
         self.label_79 = QtWidgets.QLabel(self.groupBox_19)
         self.label_79.setObjectName("label_79")
         self.gridLayout_23.addWidget(self.label_79, 2, 0, 1, 1)
-        self.edtJudgeTemp1 = QtWidgets.QLineEdit(self.groupBox_19)
+        self.edtJudgeTemp1 = SingedShort(self.groupBox_19)
         self.edtJudgeTemp1.setObjectName("edtJudgeTemp1")
         self.gridLayout_23.addWidget(self.edtJudgeTemp1, 2, 1, 1, 1)
         self.label_80 = QtWidgets.QLabel(self.groupBox_19)
         self.label_80.setObjectName("label_80")
         self.gridLayout_23.addWidget(self.label_80, 2, 2, 1, 1)
-        self.edtJudgeTemp2 = QtWidgets.QLineEdit(self.groupBox_19)
+        self.edtJudgeTemp2 = SingedShort(self.groupBox_19)
         self.edtJudgeTemp2.setObjectName("edtJudgeTemp2")
         self.gridLayout_23.addWidget(self.edtJudgeTemp2, 2, 3, 1, 1)
         self.label_81 = QtWidgets.QLabel(self.groupBox_19)
         self.label_81.setObjectName("label_81")
         self.gridLayout_23.addWidget(self.label_81, 3, 0, 1, 1)
-        self.edtJudgeTemp3 = QtWidgets.QLineEdit(self.groupBox_19)
+        self.edtJudgeTemp3 = SingedShort(self.groupBox_19)
         self.edtJudgeTemp3.setObjectName("edtJudgeTemp3")
         self.gridLayout_23.addWidget(self.edtJudgeTemp3, 3, 1, 1, 1)
         self.horizontalLayout_14 = QtWidgets.QHBoxLayout()
@@ -1195,25 +952,25 @@ class Ui_mainWindow(object):
         self.label_82 = QtWidgets.QLabel(self.groupBox_20)
         self.label_82.setObjectName("label_82")
         self.gridLayout_24.addWidget(self.label_82, 0, 0, 1, 1)
-        self.edtOtherSolar = QtWidgets.QLineEdit(self.groupBox_20)
+        self.edtOtherSolar = DeviationEdit(self.groupBox_20)
         self.edtOtherSolar.setObjectName("edtOtherSolar")
         self.gridLayout_24.addWidget(self.edtOtherSolar, 0, 1, 1, 1)
         self.label_83 = QtWidgets.QLabel(self.groupBox_20)
         self.label_83.setObjectName("label_83")
         self.gridLayout_24.addWidget(self.label_83, 0, 2, 1, 1)
-        self.edtOtherWaterOut = QtWidgets.QLineEdit(self.groupBox_20)
+        self.edtOtherWaterOut = DeviationEdit(self.groupBox_20)
         self.edtOtherWaterOut.setObjectName("edtOtherWaterOut")
         self.gridLayout_24.addWidget(self.edtOtherWaterOut, 0, 3, 1, 1)
         self.label_84 = QtWidgets.QLabel(self.groupBox_20)
         self.label_84.setObjectName("label_84")
         self.gridLayout_24.addWidget(self.label_84, 1, 0, 1, 1)
-        self.edtOtherTemp = QtWidgets.QLineEdit(self.groupBox_20)
+        self.edtOtherTemp = DeviationEdit(self.groupBox_20)
         self.edtOtherTemp.setObjectName("edtOtherTemp")
         self.gridLayout_24.addWidget(self.edtOtherTemp, 1, 1, 1, 1)
         self.label_85 = QtWidgets.QLabel(self.groupBox_20)
         self.label_85.setObjectName("label_85")
         self.gridLayout_24.addWidget(self.label_85, 1, 2, 1, 1)
-        self.edtOtherWaterIn = QtWidgets.QLineEdit(self.groupBox_20)
+        self.edtOtherWaterIn = DeviationEdit(self.groupBox_20)
         self.edtOtherWaterIn.setObjectName("edtOtherWaterIn")
         self.gridLayout_24.addWidget(self.edtOtherWaterIn, 1, 3, 1, 1)
         self.horizontalLayout_15 = QtWidgets.QHBoxLayout()
@@ -1235,13 +992,13 @@ class Ui_mainWindow(object):
         self.label_66 = QtWidgets.QLabel(self.groupBox_14)
         self.label_66.setObjectName("label_66")
         self.gridLayout_17.addWidget(self.label_66, 0, 0, 1, 1)
-        self.edtPinterval = QtWidgets.QLineEdit(self.groupBox_14)
+        self.edtPinterval = UnSingedShort(self.groupBox_14)
         self.edtPinterval.setObjectName("edtPinterval")
         self.gridLayout_17.addWidget(self.edtPinterval, 0, 1, 1, 1)
         self.label_67 = QtWidgets.QLabel(self.groupBox_14)
         self.label_67.setObjectName("label_67")
         self.gridLayout_17.addWidget(self.label_67, 0, 2, 1, 1)
-        self.edtFinterval = QtWidgets.QLineEdit(self.groupBox_14)
+        self.edtFinterval = UnSingedShort(self.groupBox_14)
         self.edtFinterval.setText("")
         self.edtFinterval.setObjectName("edtFinterval")
         self.gridLayout_17.addWidget(self.edtFinterval, 0, 3, 1, 1)
@@ -1257,19 +1014,19 @@ class Ui_mainWindow(object):
         self.label_68 = QtWidgets.QLabel(self.groupBox_15)
         self.label_68.setObjectName("label_68")
         self.gridLayout_18.addWidget(self.label_68, 0, 0, 1, 1)
-        self.edtLogicTemp1 = QtWidgets.QLineEdit(self.groupBox_15)
+        self.edtLogicTemp1 = SingedByte(self.groupBox_15)
         self.edtLogicTemp1.setObjectName("edtLogicTemp1")
         self.gridLayout_18.addWidget(self.edtLogicTemp1, 0, 1, 1, 1)
         self.label_69 = QtWidgets.QLabel(self.groupBox_15)
         self.label_69.setObjectName("label_69")
         self.gridLayout_18.addWidget(self.label_69, 0, 2, 1, 1)
-        self.edtLogicTemp2 = QtWidgets.QLineEdit(self.groupBox_15)
+        self.edtLogicTemp2 = SingedByte(self.groupBox_15)
         self.edtLogicTemp2.setObjectName("edtLogicTemp2")
         self.gridLayout_18.addWidget(self.edtLogicTemp2, 0, 3, 1, 1)
         self.label_70 = QtWidgets.QLabel(self.groupBox_15)
         self.label_70.setObjectName("label_70")
         self.gridLayout_18.addWidget(self.label_70, 1, 0, 1, 1)
-        self.edtLogicTemp = QtWidgets.QLineEdit(self.groupBox_15)
+        self.edtLogicTemp = SingedByte(self.groupBox_15)
         self.edtLogicTemp.setObjectName("edtLogicTemp")
         self.gridLayout_18.addWidget(self.edtLogicTemp, 1, 1, 1, 1)
         self.horizontalLayout_12 = QtWidgets.QHBoxLayout()
@@ -1581,7 +1338,7 @@ class Ui_mainWindow(object):
         self.label_31 = QtWidgets.QLabel(self.groupBox_6)
         self.label_31.setObjectName("label_31")
         self.gridLayout_6.addWidget(self.label_31, 0, 0, 1, 1)
-        self.edtShowChangeModleNum = QtWidgets.QLineEdit(self.groupBox_6)
+        self.edtShowChangeModleNum = ModuleEdit(self.groupBox_6)
         self.edtShowChangeModleNum.setObjectName("edtShowChangeModleNum")
         self.gridLayout_6.addWidget(self.edtShowChangeModleNum, 0, 1, 1, 1)
         self.label_32 = QtWidgets.QLabel(self.groupBox_6)
@@ -1803,6 +1560,8 @@ class Ui_mainWindow(object):
         self.gridLayout_4.addWidget(self.btnReadOtherTime, 0, 0, 1, 1)
         self.lineEdit_153 = QtWidgets.QLineEdit(self.groupBox_4)
         self.lineEdit_153.setReadOnly(True)
+        self.lineEdit_153.setText('-')
+        self.lineEdit_153.setAlignment(Qt.AlignCenter)
         self.lineEdit_153.setObjectName("lineEdit_153")
         self.gridLayout_4.addWidget(self.lineEdit_153, 0, 1, 1, 1)
         self.btnReadCleanElc = QtWidgets.QPushButton(self.groupBox_4)
@@ -1811,6 +1570,8 @@ class Ui_mainWindow(object):
         self.gridLayout_4.addWidget(self.btnReadCleanElc, 1, 0, 1, 1)
         self.lineEdit_154 = QtWidgets.QLineEdit(self.groupBox_4)
         self.lineEdit_154.setReadOnly(True)
+        self.lineEdit_154.setText('-')
+        self.lineEdit_154.setAlignment(Qt.AlignCenter)
         self.lineEdit_154.setObjectName("lineEdit_154")
         self.gridLayout_4.addWidget(self.lineEdit_154, 1, 1, 1, 1)
         self.gridLayout_11.addWidget(self.groupBox_4, 0, 1, 1, 1)
@@ -1832,14 +1593,19 @@ class Ui_mainWindow(object):
         self.statusbar.setObjectName("statusbar")
         mainWindow.setStatusBar(self.statusbar)
         self.action = QtWidgets.QAction(mainWindow)
+        self.action.setIcon(QtGui.QIcon(QtGui.QPixmap(':quit.ioc')))
         self.action.setObjectName("action")
         self.action_2 = QtWidgets.QAction(mainWindow)
+        self.action_2.setIcon(QtGui.QIcon(QtGui.QPixmap(':about.ico')))
         self.action_2.setObjectName("action_2")
         self.action_3 = QtWidgets.QAction(mainWindow)
+        self.action_3.setIcon(QtGui.QIcon(QtGui.QPixmap(':cfg.ico')))
         self.action_3.setObjectName("action_3")
         self.action_DTU = QtWidgets.QAction(mainWindow)
+        self.action_DTU.setIcon(QtGui.QIcon(QtGui.QPixmap(':activate.ico')))
         self.action_DTU.setObjectName("action_DTU")
         self.action_DTU_2 = QtWidgets.QAction(mainWindow)
+        self.action_DTU_2.setIcon(QtGui.QIcon(QtGui.QPixmap(':reactivate.ico')))
         self.action_DTU_2.setObjectName("action_DTU_2")
         self.menu.addAction(self.action_2)
         self.menu_2.addAction(self.action_3)
@@ -2127,7 +1893,7 @@ class Ui_mainWindow(object):
         self.menu_3.setTitle(_translate("mainWindow", "帮助"))
         self.action.setText(_translate("mainWindow", "退出"))
         self.action_2.setText(_translate("mainWindow", "软件信息"))
-        self.action_3.setText(_translate("mainWindow", "导入服务器"))
+        self.action_3.setText(_translate("mainWindow", "导入"))
         self.action_DTU.setText(_translate("mainWindow", "激活DTU"))
         self.action_DTU_2.setText(_translate("mainWindow", "去活DTU"))
 

@@ -16,6 +16,7 @@ if __name__ == '__main__':
     app = QApplication(sys.argv)
     mainWindow = SafeCloseMainWindow()
     main = windowController(mainWindow)
+    mainWindow.setFixedSize(1036, 660)
     mainWindow.show()
     sys.exit(app.exec_())
     pass

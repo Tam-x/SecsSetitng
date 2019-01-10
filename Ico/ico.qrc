@@ -1,0 +1,16 @@
+<!DOCTYPE RCC><RCC version="1.0">
+ 
+ <qresource prefix="/">
+
+    <file alias="about.ico">about.ico</file>
+
+    <file alias="activate.ico">activate.ico</file>
+
+	<file alias="cfg.ico">cfg.ico</file>
+	
+	<file alias="quit.ioc">quit.ico</file>
+	
+	<file alias="reactivate.ico">reactivate.ico</file>
+    <file alias="panda.ico">panda.ico</file>
+  </qresource>
+</RCC>
