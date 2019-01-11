@@ -32,8 +32,11 @@ class windowController(Ui_mainWindow, QDialog):
         self.isConnected = False
         self.notifyConnectedStatus = False
         self.notifyUnconnectedStatus = False
-        self.importPort = False
-        self.importBroker = False
+        self.isSupperPwd = False
+        self.isCoustomPwd = False
+        self.inputPwdTime = 0
+        self.mqttUser   = Config.MQTT_USER
+        self.mqttCode   = Config.MQTT_CODE
 
         self.cmdA1 = False
         self.cmdA2 = False
@@ -57,8 +60,6 @@ class windowController(Ui_mainWindow, QDialog):
         self.dtuCom     = self.get_dtu_com()
         self.mqttServer = self.get_mqtt_server()
         self.mqttPort   = self.get_mqtt_port()
-        self.mqttUser   = Config.MQTT_USER
-        self.mqttCode   = Config.MQTT_CODE
 
     def click_event(self):
         self.btnMqttConnect.clicked.connect(self.click_btn_connect)
@@ -120,23 +121,25 @@ class windowController(Ui_mainWindow, QDialog):
         info = '导入配置'
         if fileName:
             try:
-                for line in open(fileName[0]):
-                    if '#' not in line and line.strip():
-                        if 'mqtt_broker' in line:
-                            self.mqttServer = line.split(':')[1].strip().replace("\n", "")
-                            info += ' | 地址: '+self.mqttServer
-                            self.importBroker = True
-                        elif 'mqtt_port' in line:
-                            self.mqttPort = line.split(':')[1].strip().replace("\n", "")
-                            info += ' | 端口: ' + self.mqttPort
-                            self.importPort = True
-                        elif 'mqtt_user' in line:
-                            self.mqttUser = line.split(':')[1].strip().replace("\n", "")
-                            info += ' | 账号: ' + self.mqttUser
-                        elif 'mqtt_pwd' in line:
-                            self.mqttCode = line.split(':')[1].strip().replace("\n", "")
-                            info += ' | 密码: ' + self.mqttCode
-                self.infos.put(info)
+                # for line in open(fileName[0]):
+                with open(fileName[0]) as f:
+                    for line in f.readlines():
+                        print(line)
+                        if '#' not in line and line.strip():
+                            if 'mqtt_broker' in line:
+                                server = line.split(':')[1].replace("\n", "").strip()
+                                info += ' | 地址: '+server
+                                self.editMqttAdr.setText(server)
+                            elif 'mqtt_user' in line:
+                                self.mqttUser = line.split(':')[1].strip().replace("\n", "")
+                                info += ' | 账号: ' + self.mqttUser
+                            elif 'mqtt_pwd' in line:
+                                self.mqttCode = line.split(':')[1].strip().replace("\n", "")
+                                info += ' | 密码: ' + self.mqttCode
+                    if '|' in info:
+                        self.infos.put(info)
+                    else:
+                        self.infos.put(info+':none!')
             except:
                 pass
 
@@ -151,6 +154,17 @@ class windowController(Ui_mainWindow, QDialog):
         if self.notifyUnconnectedStatus:
             self.notifyUnconnectedStatus = False
             self.mqtt_unconnected_status()
+
+        if self.isCoustomPwd:
+            if time.time() - self.inputPwdTime > Config.PWD_INPUT_INTERVAL:
+                self.isCoustomPwd = False
+                if self.isConnected:
+                    try:
+                        self.statusbar.showMessage('与服务器断开连接！')
+                        self.mqttClient.disconnect()
+                        self.notifyUnconnectedStatus = True
+                    except:
+                        self.notifyUnconnectedStatus = True
 
         if self.cmdA1:
             self.cmdA1 = False
@@ -188,7 +202,7 @@ class windowController(Ui_mainWindow, QDialog):
         if not self.dtuIp:
             self.statusbar.showMessage('DTU地址填写有误！')
             return None
-        if not self.deviceAdr:
+        if not self.deviceAdr and self.deviceAdr is not 0:
             self.statusbar.showMessage('设备地址填写有误！')
             return None
         if not self.mqttServer:
@@ -208,6 +222,18 @@ class windowController(Ui_mainWindow, QDialog):
         self.btnMqttConnect.setText('连接')
 
     def click_btn_connect(self):
+        if not self.isCoustomPwd and not self.isSupperPwd:
+            res = Utility.check_password()
+            if not res:
+                return False
+            if res == 1:
+                self.isSupperPwd = True
+                self.infos.put('欢迎无敌超级用户666登陆！')
+            else:
+                self.inputPwdTime = time.time()
+                self.isCoustomPwd = True
+                self.infos.put('欢迎用户登陆！')
+
         if self.isConnecting:
             self.statusbar.showMessage('正在连接远程服务器...')
             return
@@ -217,7 +243,7 @@ class windowController(Ui_mainWindow, QDialog):
             self.connect_remote()
 
     def connect_remote(self):
-        self.statusbar.showMessage('开始连接...')
+        self.infos.put('开始连接...')
         if self.limit_click_freq():
             self.init()
             if self.check_input_info():
@@ -226,7 +252,7 @@ class windowController(Ui_mainWindow, QDialog):
     def disconnect_remote(self):
         try:
             if self.limit_click_freq():
-                self.statusbar.showMessage('与服务器断开连接！')
+                self.infos.put('与服务器断开连接！')
                 self.mqttClient.disconnect()
                 self.notifyUnconnectedStatus = True
         except:
@@ -450,14 +476,9 @@ class windowController(Ui_mainWindow, QDialog):
         return self.comboBox.currentIndex()+1
 
     def get_mqtt_server(self):
-        ip1 = self.editMqttAdr.text().strip()
-        ip2 = self.editMqttAdr_2.text().strip()
-        ip3 = self.editMqttAdr_3.text().strip()
-        ip4 = self.editMqttAdr_4.text().strip()
-        if ip1 and ip2 and ip3 and ip4:
-            return ip1+'.'+ip2+'.' + ip3+'.' + ip4
-        if self.importBroker:
-            return self.mqttServer
+        server = self.editMqttAdr.text().strip()
+        if server:
+            return server
         return None
 
     def get_mqtt_port(self):

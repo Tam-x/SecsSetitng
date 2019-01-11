@@ -7,6 +7,8 @@ Created date: 2019/01/03
 Last edited: 2018/01/03
 '''
 from Config import Config
+from Widget.Dialog import PasswordDialog
+from PyQt5.QtWidgets import QDialog
 
 def show_log(info):
     if Config.SHOW_LOG:
@@ -23,6 +25,17 @@ def create_timestamp():
     now.append(i.minute)
     now.append(i.second)
     return now
+
+def check_password():
+    dialog = PasswordDialog()
+    dialog.setStyleSheet("QDialog {\n"
+                         "    background-color:#BBBBFB;\n"
+                         "    font-family: \"Segoe UI\";\n"
+                         "}\n")
+    result = dialog.exec()
+    if result == QDialog.Accepted:
+        return dialog.usertype
+    return False
 
 def int_to_2bytes(num):
     return (num >> 8) & 0xFF, num & 0xFF
