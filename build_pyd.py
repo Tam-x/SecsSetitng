@@ -4,7 +4,7 @@ Created on Wed Aug 29 13:33:20 2018
 
 @author: Li Zeng hai
 """
-#python start_pyd.py build_ext --inplace
+#python build_pyd.py build_ext --inplace
 
 from distutils.core import setup
 from Cython.Build import cythonize

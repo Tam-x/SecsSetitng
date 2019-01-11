@@ -16,8 +16,8 @@ import time
 class AboutDialog(QDialog):
     def __init__(self, parent=None):
         super(AboutDialog, self).__init__(parent)
-        self.resize(360, 180)
-        self.setFixedSize(360, 180)
+        self.resize(360, 190)
+        self.setFixedSize(360, 190)
         self.setWindowTitle('关于')
         self.setWindowIcon((QtGui.QIcon(':about.ico')))
         label=QLabel('名称：SECS远程桌面工具', self)

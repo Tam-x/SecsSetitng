@@ -6,7 +6,7 @@ Created by Tan.Xing
 Created date: 2019/01/03
 Last edited: 2018/01/03
 '''
-VERSION = '1.0.2'
+VERSION = '1.0.3'
 
 MQTT_BROKER = None
 MQTT_PORT = None

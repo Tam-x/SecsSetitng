@@ -243,10 +243,10 @@ class windowController(Ui_mainWindow, QDialog):
             self.connect_remote()
 
     def connect_remote(self):
-        self.infos.put('开始连接...')
         if self.limit_click_freq():
             self.init()
             if self.check_input_info():
+                self.infos.put('开始连接...')
                 self.start_mqtt_client()
 
     def disconnect_remote(self):
